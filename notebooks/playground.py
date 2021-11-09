@@ -47,10 +47,6 @@ query = DocumentArray(from_files("data/query/*.png"))
 len(docs), len(query)
 # -
 
-query[0].convert_uri_to_image_blob().set_image_blob_shape(
-    shape=(224, 224)
-).set_image_blob_normalization().set_image_blob_channel_axis(-1, 0)
-
 query.plot_image_sprites()
 
 f = (
@@ -66,6 +62,12 @@ f.plot("data/flow.png")
 
 def print_result(resp):
     print(resp.docs.get_attributes("matches"))
+    resp.docs.plot_image_sprites()
+
+    for doc in resp.docs:
+        for match in doc.matches:
+            doc.convert_uri_to_image_blob()
+        doc.matches.plot_image_sprites()
 
 
 # + tags=[]
@@ -75,8 +77,7 @@ with f:
         "/eval",
         query,
         shuffle=True,
-        parameters={"top_k": 5},
+        parameters={"top_k": 40},
         on_done=print_result,
         show_progress=True,
     )
-# -
