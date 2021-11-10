@@ -25,7 +25,13 @@ class ResNetEncoder(Executor):
     def encode(self, docs: "DocumentArray", **kwargs):
 
         for doc in docs:
-            doc.convert_uri_to_image_blob().set_image_blob_shape(
+            if doc.blob is None:
+                doc.convert_uri_to_image_blob()
+                original_blob = None
+            else:
+                original_blob = np.copy(doc.blob)
+
+            doc.set_image_blob_shape(
                 shape=(224, 224)
             ).set_image_blob_normalization().set_image_blob_channel_axis(-1, 0)
 
@@ -42,7 +48,11 @@ class ResNetEncoder(Executor):
         for doc, embed, cont in zip(docs, embeds, content):
             doc.embedding = embed
             doc.content = cont
-            doc.pop("blob")
+
+            if original_blob is not None:
+                doc.blob = original_blob
+            else:
+                doc.pop("blob")
 
 
 class KNNIndexer(Executor):

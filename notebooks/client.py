@@ -19,11 +19,20 @@
 import os
 
 os.chdir("..")
-# -
 
-from jina import Client, DocumentArray
+from io import BytesIO
+
+import matplotlib.pyplot as plt
+
+# +
+from jina import Client, Document, DocumentArray
 from jina.types.document.generators import from_files
 from jina.types.request import Response
+from PIL import Image
+
+from find_my_bike.executors import ResNetEncoder
+
+# -
 
 
 def print_result(resp: Response):
@@ -31,12 +40,12 @@ def print_result(resp: Response):
     resp.docs.plot_image_sprites()
 
     for doc in resp.docs:
-        for match in doc.matches:
-            doc.convert_uri_to_image_blob()
-        doc.matches.plot_image_sprites()
+        in_memory_file = BytesIO()
+        doc.matches.plot_image_sprites(in_memory_file)
+        plt.show(Image.open(in_memory_file))
 
 
-query = DocumentArray(from_files("data/query/*.png"))
+query = DocumentArray(from_files("data/img.png"))
 
 c = Client(protocol="http", port=12345)  # connect to localhost:12345
 
@@ -44,7 +53,7 @@ c.post(
     "/eval",
     query,
     shuffle=True,
-    parameters={"top_k": 40},
+    parameters={"top_k": 4},
     on_done=print_result,
     show_progress=True,
 )
