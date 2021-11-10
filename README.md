@@ -1,5 +1,8 @@
 # find_my_bike
 
+The searching model are developed in an other ![repo](https://github.com/samsja/findmybike-models)
+
+
 ## How to use it ?
 
 first install the dependecies:
