@@ -29,9 +29,6 @@ from jina.types.document.generators import from_files
 
 from find_my_bike.executors import KNNIndexer, ResNetEncoder
 
-# -
-
-
 # +
 files = chain(
     chain(
