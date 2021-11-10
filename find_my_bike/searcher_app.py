@@ -24,7 +24,13 @@ def searcher_app():
     f = (
         Flow(port_expose=12345, protocol="http", cors=True)
         .add(
-            name="encoder", uses=ResNetEncoder, uses_with={"device": "cuda"}, replicas=2
+            name="encoder",
+            uses=ResNetEncoder,
+            uses_with={
+                "device": "cuda",
+                "pretrain_path": "data/models/v1/pytorch.ckpt",
+            },
+            replicas=2,
         )
         .add(
             name="k_nn",

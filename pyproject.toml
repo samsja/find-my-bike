@@ -10,6 +10,7 @@ torch = "^1.9.1"
 torchvision = "^0.10.1"
 jina = "^2.4.0"
 gradio = "^2.4.4"
+bike-models = {git = "https://github.com/samsja/findmybike-models"}
 
 [tool.poetry.dev-dependencies]
 pytest = "^5.2"

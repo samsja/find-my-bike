@@ -45,7 +45,7 @@ def print_result(resp: Response):
         plt.show(Image.open(in_memory_file))
 
 
-query = DocumentArray(from_files("data/img.png"))
+query = DocumentArray(from_files("data/query/*.png"))
 
 c = Client(protocol="http", port=12345)  # connect to localhost:12345
 

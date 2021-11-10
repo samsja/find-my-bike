@@ -1,10 +1,10 @@
-from typing import Dict
+from typing import Dict, Optional
 
 import numpy as np
 import torch
 import torch.nn as nn
 from jina import DocumentArray, Executor, requests
-from torchvision.models import resnet18
+from vision_transformers.transformers.resnet import ResNet
 
 
 class ResNetEncoder(Executor):
@@ -12,9 +12,15 @@ class ResNetEncoder(Executor):
     Encode data using SVD decomposition
     """
 
-    def __init__(self, device: torch.device, **kwargs):
+    def __init__(self, device: torch.device, pretrain_path: str, **kwargs):
         super().__init__(**kwargs)
-        self.model = resnet18(pretrained=True)
+
+        if pretrain_path is None:
+            self.model = ResNet(num_classes=3, pretrained=True)
+        else:
+            self.model = ResNet(num_classes=3, pretrained=False)
+            self.model.load_state_dict(torch.load(pretrain_path))
+
         self.model.fc = nn.Identity()
         self.model.eval()
 
