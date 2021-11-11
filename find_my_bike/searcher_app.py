@@ -17,7 +17,13 @@ def searcher_app():
         from_files("data/bike_data/course/*.png"),
     )
 
-    docs = DocumentArray(files)[0:500]
+    docs = DocumentArray(files)
+
+    mask = np.arange(len(docs))
+    np.random.shuffle(mask)
+
+    docs = docs[mask.tolist()][0:500]
+
     query = DocumentArray(from_files("data/query/*.png"))
 
     f = (
