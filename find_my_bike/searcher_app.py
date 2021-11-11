@@ -9,7 +9,6 @@ from find_my_bike.executors import KNNIndexer, ResNetEncoder
 
 def searcher_app():
 
-    # +
     files = chain(
         chain(
             from_files("data/bike_data/bmx/*.png"),
@@ -18,7 +17,7 @@ def searcher_app():
         from_files("data/bike_data/course/*.png"),
     )
 
-    docs = DocumentArray(files)[0:300]
+    docs = DocumentArray(files)[0:500]
     query = DocumentArray(from_files("data/query/*.png"))
 
     f = (
@@ -29,6 +28,7 @@ def searcher_app():
             uses_with={
                 "device": "cuda",
                 "pretrain_path": "data/models/v1/pytorch.ckpt",
+                "batch_size": 256,
             },
             replicas=2,
         )
@@ -39,7 +39,7 @@ def searcher_app():
     )
 
     with f:
-        f.index(docs)
+        f.index(docs, request_size=300)
 
         f.block()
 

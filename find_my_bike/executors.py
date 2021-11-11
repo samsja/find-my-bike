@@ -1,4 +1,4 @@
-from typing import Dict, Optional
+from typing import Dict, Iterable, Optional
 
 import numpy as np
 import torch
@@ -12,7 +12,9 @@ class ResNetEncoder(Executor):
     Encode data using SVD decomposition
     """
 
-    def __init__(self, device: torch.device, pretrain_path: str, **kwargs):
+    def __init__(
+        self, device: torch.device, pretrain_path: str, batch_size: int, **kwargs
+    ):
         super().__init__(**kwargs)
 
         if pretrain_path is None:
@@ -27,38 +29,50 @@ class ResNetEncoder(Executor):
         self.device = device
         self.model.to(self.device)
 
+        self.batch_size = batch_size
+
     @requests
     def encode(self, docs: "DocumentArray", **kwargs):
+        if docs:
+            docs_batch = docs.batch(batch_size=self.batch_size)
 
-        for doc in docs:
-            if doc.blob is None:
-                doc.convert_uri_to_image_blob()
-                original_blob = None
-            else:
-                original_blob = np.copy(doc.blob)
+            self._embedding(docs_batch)
 
-            doc.set_image_blob_shape(
-                shape=(224, 224)
-            ).set_image_blob_normalization().set_image_blob_channel_axis(-1, 0)
+    def _embedding(self, docs_batch: Iterable):
+        for docs in docs_batch:
+            for doc in docs:
+                if doc.blob is None:
+                    doc.convert_uri_to_image_blob()
+                    original_blob = None
+                else:
+                    original_blob = np.copy(doc.blob)
 
-        content = np.stack(docs.get_attributes("content"))
-        embeds = np.zeros(content.shape[0])
+                doc.set_image_blob_shape(
+                    shape=(224, 224)
+                ).set_image_blob_normalization().set_image_blob_channel_axis(-1, 0)
 
-        with torch.inference_mode():
-            embeds = (
-                self.model(torch.from_numpy(content).float().to(self.device))
-                .to("cpu")
-                .numpy()
-            )
+            content = np.stack(docs.get_attributes("content"))
+            embeds = np.zeros(content.shape[0])
 
-        for doc, embed, cont in zip(docs, embeds, content):
-            doc.embedding = embed
-            doc.content = cont
+            with torch.inference_mode():
 
-            if original_blob is not None:
-                doc.blob = original_blob
-            else:
-                doc.pop("blob")
+                embeds = (
+                    self.model(torch.from_numpy(content).float().to(self.device))
+                    .to("cpu")
+                    .numpy()
+                )
+
+            for doc, embed, cont in zip(docs, embeds, content):
+                doc.embedding = embed
+                doc.content = cont
+
+                if original_blob is not None:
+                    doc.blob = original_blob
+                else:
+                    doc.pop("blob")
+
+        if "cuda" in self.device:
+            torch.cuda.empty_cache()
 
 
 class KNNIndexer(Executor):
